@@ -37,6 +37,7 @@ export const nodeQuizQuestions: QuizQuestion[] = [
       "A browser-based editor",
       "A CSS library",
     ],
+    correctIndex: 0,
   },
   {
     question: "Which command is used to initialize a new Node.js project?",

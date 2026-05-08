@@ -216,6 +216,7 @@ export const nextjsQuizQuestions: QuizQuestion[] = [
       "It provides a list of all Google Fonts in a dropdown",
       "It changes font colors automatically",
     ],
+    correctIndex: 1,
   },
   {
     question: "How do you handle 404 errors in a specific route segment?",
