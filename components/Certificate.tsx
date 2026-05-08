@@ -1,9 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-// ❌ REMOVE these top-level imports (cause module resolution issues in Next.js)
-// import html2canvas from "html2canvas";
-// import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 /* ─── Font & animation injection ─── */
 const STYLES = `
@@ -18,22 +17,14 @@ const STYLES = `
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
-/* Wrapper for responsive scaling */
 .cert-wrapper {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  max-width: 820px;
   animation: cert-fade-in 0.8s ease-out both;
 }
-
-/* A4 Landscape: 297mm × 210mm = 1123px × 794px @ 96 DPI */
 .cert-card {
   position: relative;
-  width: 297mm;
-  height: 210mm;
-  min-width: 297mm;
-  min-height: 210mm;
+  /* Premium multi-shade white background */
   background: linear-gradient(145deg, #ffffff 0%, #fafafa 25%, #f5f5f7 50%, #fafafa 75%, #ffffff 100%);
   border-radius: 4px;
   padding: 40px 48px;
@@ -41,31 +32,7 @@ const STYLES = `
   border: 1px solid #c9a84c;
   box-shadow: 0 0 0 4px #08090d, 0 0 0 8px #c9a84c, 0 20px 60px rgba(0,0,0,0.4);
   overflow: hidden;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-user-select: none;
 }
-
-/* Mobile: Scale down to fit screen while keeping A4 ratio */
-@media (max-width: 1200px) {
-  .cert-card {
-    transform: scale(0.85);
-    transform-origin: top center;
-  }
-}
-@media (max-width: 900px) {
-  .cert-card {
-    transform: scale(0.7);
-    transform-origin: top center;
-  }
-}
-@media (max-width: 600px) {
-  .cert-card {
-    transform: scale(0.55);
-    transform-origin: top center;
-  }
-}
-
 /* Decorative corner elements */
 .cert-corner {
   position: absolute;
@@ -73,13 +40,11 @@ const STYLES = `
   height: 40px;
   border: 2px solid #c9a84c;
   pointer-events: none;
-  z-index: 2;
 }
 .cert-corner.tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
 .cert-corner.tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
 .cert-corner.bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
 .cert-corner.br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
-
 /* Animated gold border flow */
 .cert-card::after {
   content: '';
@@ -93,7 +58,6 @@ const STYLES = `
   opacity: 0.15;
   z-index: -1;
 }
-
 /* Subtle premium pattern overlay */
 .cert-card::before {
   content: '';
@@ -105,20 +69,18 @@ const STYLES = `
     radial-gradient(circle at 85% 15%, rgba(201,168,76,0.03) 0%, transparent 45%),
     repeating-linear-gradient(135deg, transparent, transparent 30px, rgba(201,168,76,0.015) 30px, rgba(201,168,76,0.015) 31px);
   opacity: 0.7;
-  z-index: 1;
 }
-
-.cert-hdr { text-align: center; margin-bottom: 24px; position: relative; z-index: 3; }
+.cert-hdr { text-align: center; margin-bottom: 24px; }
 .cert-title {
   font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(18px, 2.5vw, 24px);
+  font-size: clamp(18px, 3vw, 24px);
   color: #163b75;
   margin: 4px 0 0;
   letter-spacing: 2.5px;
 }
 .cert-name {
   font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(22px, 4vw, 36px);
+  font-size: clamp(22px, 4.5vw, 36px);
   color: #08090d;
   letter-spacing: 1.5px;
   border-bottom: 2px solid #c9a84c;
@@ -134,8 +96,7 @@ const STYLES = `
   display: inline-block;
   margin-top: 12px;
 }
-
-/* Bottom section - signature & auth */
+/* Bottom section - signature & auth with exact gap */
 .cert-bottom {
   display: flex;
   justify-content: space-between;
@@ -144,8 +105,7 @@ const STYLES = `
   padding-top: 20px;
   margin-top: 24px;
   position: relative;
-  z-index: 3;
-  padding: 0 20px;
+  gap: 150px;
 }
 .cert-auth { display: flex; flex-direction: column; gap: 2px; }
 .cert-auth-badge { display: flex; align-items: center; gap: 4px; }
@@ -169,28 +129,17 @@ const STYLES = `
   color: #5a5f7a; 
   text-transform: uppercase; 
 }
-
-/* Date/Time - bottom-right corner */
+/* Date/Time - separate minimal div at bottom-right corner of certificate */
 .cert-issued {
   position: absolute;
-  bottom: 8px;
-  right: 20px;
-  font-size: 10px;
-  color: #5a5f7a;
-  font-family: 'DM Sans', sans-serif;
+  bottom: 12px;
+  right: 16px;
+  font-size: 1px;
+  color: #000000;
+  font-family: monospace;
   letter-spacing: 0.2px;
   white-space: nowrap;
-  z-index: 3;
-}
-
-/* Action buttons */
-.cert-actions {
-  text-align: center;
-  margin-top: 20px;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
+  /* No border, no background - just simple black text */
 }
 .cert-btn {
   padding: 10px 24px;
@@ -232,7 +181,6 @@ function injectStyles() {
   }
 }
 
-// ✅ Default export - this is what the error was about
 export default function Certificate({
   name,
   score,
@@ -268,59 +216,30 @@ export default function Certificate({
   const pct = Math.round((score / total) * 100);
   const certId = `EVL-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
-  // ✅ Dynamic imports inside function (not at top level)
   const handleDownloadPDF = async () => {
     if (!certRef.current) return;
-
     try {
-      // Dynamically import libraries only when needed
       const html2canvas = (await import("html2canvas")).default;
       const jsPDF = (await import("jspdf")).default;
 
-      // Temporarily remove transform for accurate capture
-      const originalTransform = certRef.current.style.transform;
-      certRef.current.style.transform = "none";
-
-      // Use high scale for crisp PDF (3 = 288 DPI)
       const canvas = await html2canvas(certRef.current, {
-        scale: 3,
+        scale: 2,
         logging: false,
         useCORS: true,
         backgroundColor: "#ffffff",
-        width: 1123, // A4 landscape px @ 96 DPI
-        height: 794,
       });
-
-      // Restore transform for display
-      certRef.current.style.transform = originalTransform;
-
       const imgData = canvas.toDataURL("image/png");
-
-      // Create PDF with A4 landscape dimensions in mm
       const pdf = new jsPDF({
         orientation: "landscape",
-        unit: "mm",
-        format: [297, 210], // A4 landscape
+        unit: "px",
+        format: [canvas.width, canvas.height],
       });
-
-      // Add image at full page size
-      pdf.addImage(imgData, "PNG", 0, 0, 297, 210);
-
-      // Add metadata
-      pdf.setProperties({
-        title: `${quizTitle} Certificate - ${name}`,
-        subject: "Evolvo Academy Certificate",
-        author: "Evolvo Academy",
-        creator: "Evolvo Certificate Generator",
-      });
-
-      // Save with clean filename
-      const safeQuiz = quizTitle.replace(/[^a-zA-Z0-9]/g, "_");
-      const safeName = name.replace(/\s+/g, "_");
-      pdf.save(`${safeQuiz}_Certificate_${safeName}.pdf`);
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(
+        `${quizTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Certificate_${name.replace(/\s+/g, "_")}.pdf`,
+      );
     } catch (err) {
       console.error("PDF generation failed:", err);
-      alert("Failed to generate PDF. Please try again.");
     }
   };
 
@@ -334,11 +253,10 @@ export default function Certificate({
         justifyContent: "center",
         padding: 20,
         fontFamily: "'DM Sans', sans-serif",
-        overflow: "auto",
       }}
     >
       <div className="cert-wrapper">
-        {/* ── Certificate Card (A4 Landscape: 297mm × 210mm) ── */}
+        {/* ── Certificate Card ── */}
         <div ref={certRef} className="cert-card">
           {/* Decorative corners */}
           <div className="cert-corner tl" />
@@ -373,7 +291,7 @@ export default function Certificate({
           </div>
 
           {/* Body */}
-          <div style={{ textAlign: "center", position: "relative", zIndex: 3 }}>
+          <div style={{ textAlign: "center" }}>
             <p style={{ fontSize: 13, color: "#5a5f7a", margin: "0 0 3px" }}>
               This certifies that
             </p>
@@ -414,7 +332,7 @@ export default function Certificate({
             </p>
           </div>
 
-          {/* Bottom Section - signature & auth */}
+          {/* Bottom Section - signature & auth with exact gap (unchanged) */}
           <div className="cert-bottom">
             {/* Left: Authentication */}
             <div className="cert-auth">
@@ -448,14 +366,22 @@ export default function Certificate({
             </div>
           </div>
 
-          {/* Date & Time - bottom-right corner */}
+          {/* Date & Time - separate minimal div at bottom-right corner of certificate */}
           <div className="cert-issued">
             {issued.date} • {issued.time}
           </div>
         </div>
 
         {/* ── Action Buttons ── */}
-        <div className="cert-actions">
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            display: "flex",
+            gap: 12,
+            justifyContent: "center",
+          }}
+        >
           <button
             className="cert-btn cert-btn-blue"
             onClick={handleDownloadPDF}

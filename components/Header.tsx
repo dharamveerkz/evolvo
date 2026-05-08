@@ -32,7 +32,7 @@ export default function Header() {
         <div className="sw">
           <span className="si">🔍</span>
           <input
-            id="search" 
+            id="search" // 👈 Added for mobile nav scroll-to-search
             className="sinput"
             placeholder="Search topics, quizzes..."
             value={search}
@@ -53,8 +53,8 @@ export default function Header() {
                   href={`/quiz/${s.category}/${s.subcategory}`}
                   className="sr-item"
                   onClick={() => {
-                    setShowSR(false); 
-                    setSearch(""); 
+                    setShowSR(false);
+                    setSearch("");
                   }}
                 >
                   <span style={{ fontSize: 15, marginRight: 8 }}>
@@ -88,7 +88,6 @@ export default function Header() {
 
         {/* Header Actions */}
         <div className="hacts">
-          {/* About: Ghost button style */}
           <Link
             href="/about"
             className="btn-g"
@@ -96,8 +95,6 @@ export default function Header() {
           >
             About
           </Link>
-
-          {/* Blog: Primary button style */}
           <Link
             href="/blog"
             className="btn-p"
