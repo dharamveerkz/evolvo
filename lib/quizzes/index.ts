@@ -20,6 +20,13 @@ import {
 } from "./aiagentsfundamentals";
 import { aiAgentTypesQuizMeta, loadAiAgentTypesQuiz } from "./aiagenttypes";
 import { aiAgentPeasQuizMeta, loadAiAgentPeasQuiz } from "./aiagentpeas";
+import { pythonQuizMeta, loadPythonQuiz } from "./python";
+import { javaQuizMeta, loadJavaQuiz } from "./java";
+import { cppQuizMeta, loadCppQuiz } from "./cpp";
+import { cQuizMeta, loadCQuiz } from "./c";
+import { rustQuizMeta, loadRustQuiz } from "./rust";
+import { goQuizMeta, loadGoQuiz } from "./go";
+import { mongodbQuizMeta, loadMongoDbQuiz } from "./mongodb";
 
 // Central registry - ONLY EDIT HERE TO ADD QUIZZES
 export const QUIZ_REGISTRY: QuizLoader[] = [
@@ -39,6 +46,13 @@ export const QUIZ_REGISTRY: QuizLoader[] = [
   { meta: aiAgentsFundamentalsQuizMeta, loader: loadAiAgentsFundamentalsQuiz },
   { meta: aiAgentTypesQuizMeta, loader: loadAiAgentTypesQuiz },
   { meta: aiAgentPeasQuizMeta, loader: loadAiAgentPeasQuiz },
+  { meta: pythonQuizMeta, loader: loadPythonQuiz },
+  { meta: javaQuizMeta, loader: loadJavaQuiz },
+  { meta: cppQuizMeta, loader: loadCppQuiz },
+  { meta: cQuizMeta, loader: loadCQuiz },
+  { meta: rustQuizMeta, loader: loadRustQuiz },
+  { meta: goQuizMeta, loader: loadGoQuiz },
+  { meta: mongodbQuizMeta, loader: loadMongoDbQuiz },
 ];
 
 // Helpers for UI components
