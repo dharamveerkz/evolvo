@@ -8,6 +8,8 @@ const SEARCH_ICONS: Record<string, string> = {
   html: "🧱",
   css: "🎨",
   sql: "🗄️",
+  js: "⚡",
+  python: "🐍",
   webdev: "🌐",
   datascience: "📊",
 };
@@ -21,12 +23,16 @@ export default function Header() {
   return (
     <header className="hdr">
       <div className="hdr-in">
+        {/* Logo */}
         <Link href="/" className="logo">
           <div className="ldot" /> Evolvo
         </Link>
+
+        {/* Search Bar */}
         <div className="sw">
           <span className="si">🔍</span>
           <input
+            id="search" 
             className="sinput"
             placeholder="Search topics, quizzes..."
             value={search}
@@ -37,6 +43,8 @@ export default function Header() {
             onFocus={() => setShowSR(true)}
             onBlur={() => setTimeout(() => setShowSR(false), 160)}
           />
+
+          {/* Search Results Dropdown */}
           {showSR && filtered.length > 0 && (
             <div className="sr-drop">
               {filtered.map((s) => (
@@ -44,19 +52,21 @@ export default function Header() {
                   key={s.id}
                   href={`/quiz/${s.category}/${s.subcategory}`}
                   className="sr-item"
+                  onClick={() => {
+                    setShowSR(false); 
+                    setSearch(""); 
+                  }}
                 >
-                  <span style={{ fontSize: 15 }}>
-                    {SEARCH_ICONS[s.subcategory] || "📚"}
+                  <span style={{ fontSize: 15, marginRight: 8 }}>
+                    {SEARCH_ICONS[s.subcategory] ||
+                      SEARCH_ICONS[s.category] ||
+                      "📚"}
                   </span>
-                  <span style={{ fontSize: 13.5, color: "var(--tx)" }}>
+                  <span style={{ fontSize: 13.5, color: "var(--tx)", flex: 1 }}>
                     {s.title}
                   </span>
                   <span
-                    style={{
-                      fontSize: 11,
-                      color: "var(--mu)",
-                      marginLeft: "auto",
-                    }}
+                    style={{ fontSize: 11, color: "var(--mu)", marginLeft: 8 }}
                   >
                     {s.category}
                   </span>
@@ -64,28 +74,34 @@ export default function Header() {
               ))}
             </div>
           )}
+
+          {/* Empty State */}
           {showSR && search && filtered.length === 0 && (
             <div
               className="sr-item"
               style={{ cursor: "default", color: "var(--mu)" }}
             >
-              No results found
+              No results for "{search}"
             </div>
           )}
         </div>
+
+        {/* Header Actions */}
         <div className="hacts">
-          <a href="/about" className="btn-p" style={{ textDecoration: "none" }}>
+          {/* About: Ghost button style */}
+          <Link
+            href="/about"
+            className="btn-g"
+            style={{ textDecoration: "none" }}
+          >
             About
-          </a>
+          </Link>
+
+          {/* Blog: Primary button style */}
           <Link
             href="/blog"
             className="btn-p"
-            style={{
-              color: "white",
-              textDecoration: "none",
-              fontSize: 13,
-              marginRight: 10,
-            }}
+            style={{ textDecoration: "none" }}
           >
             Blog
           </Link>

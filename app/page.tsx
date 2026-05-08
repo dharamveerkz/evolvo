@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 import {
   getAllQuizMetadata,
   getFeaturedQuizzes,
   getQuizzesByCategory,
-} from "../lib/quizzes";
-import type { QuizMeta } from "../lib/quizzes/types";
+} from "@/lib/quizzes";
+
+
+import type { QuizMeta } from "@/lib/quizzes/types";
 
 const CATEGORY_CONFIG: Record<
   string,
@@ -38,21 +42,17 @@ const LEVEL_STYLE = {
 };
 
 export default function Home() {
-  // ✅ EXISTING STATE
   const [mounted, setMounted] = useState(false);
   const [openProf, setOpenProf] = useState<string | null>(null);
-  const [activeNav, setActiveNav] = useState("home");
-
-  // ✅ NEW STATE FOR EXPLORE DROPDOWN
   const [showExplore, setShowExplore] = useState(false);
 
   const profRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
 
-  // Existing mount effect
+  // Mount effect for fade-in
   useEffect(() => setMounted(true), []);
 
-  // ✅ NEW EFFECT: Close dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -149,7 +149,7 @@ export default function Home() {
           Track growth, earn certificates, master every topic.
         </p>
 
-        {/* ✅ FIXED: Single .hcta with dropdown + How it works link */}
+        {/* CTA Buttons with Dropdown */}
         <div className="hcta" style={{ position: "relative" }}>
           {/* Explore Quizzes Button */}
           <button
@@ -261,7 +261,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* ✅ How it works - NOW A PROPER LINK */}
+          {/* How it works Link */}
           <Link href="/how-it-works">
             <button className="blg blg-o">How it works</button>
           </Link>
@@ -314,8 +314,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Browse by Profession */}
-      <section className="sec" ref={profRef}>
+      {/* Browse by Profession - 👈 Added id="categories" for mobile nav scroll */}
+      <section className="sec" ref={profRef} id="categories">
         <div className="sec-hdr">
           <div>
             <div className="sec-ttl">Browse by Profession</div>
@@ -454,189 +454,7 @@ export default function Home() {
       </section>
 
       <Footer />
-
-      {/* Mobile Nav */}
-      <nav className="mnav">
-        <div className="mnav-in">
-          {[
-            {
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9,22 9,12 15,12 15,22" />
-                </svg>
-              ),
-              label: "Home",
-              href: "/",
-            },
-            {
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              ),
-              label: "Search",
-              href: "#search",
-              action: "focus-search",
-            },
-            {
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-              ),
-              label: "Categories",
-              href: "#categories",
-              action: "scroll-categories",
-            },
-            {
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                </svg>
-              ),
-              label: "Leaderboard",
-              href: "/about",
-            },
-            {
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              ),
-              label: "Profile",
-              href: "/blog",
-            },
-          ].map((item, i) => {
-            const isActive = activeNav === item.label.toLowerCase();
-
-            // Special actions for non-route items
-            const handleClick = (e: React.MouseEvent) => {
-              e.preventDefault();
-              setActiveNav(item.label.toLowerCase());
-
-              if (item.action === "focus-search") {
-                const searchInput = document.querySelector(
-                  ".sinput",
-                ) as HTMLInputElement;
-                if (searchInput) {
-                  searchInput.focus();
-                  searchInput.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }
-              }
-              if (item.action === "scroll-categories") {
-                profRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-                // Adjust for fixed header
-                setTimeout(
-                  () => window.scrollBy({ top: -60, behavior: "smooth" }),
-                  100,
-                );
-              }
-            };
-
-            // Direct route links
-            if (item.href.startsWith("/") && !item.action) {
-              return (
-                <Link
-                  key={i}
-                  href={item.href}
-                  className={`mni${isActive ? " active" : ""}`}
-                  onClick={() => setActiveNav(item.label.toLowerCase())}
-                >
-                  <span
-                    className="mni-ico"
-                    style={{ color: isActive ? "var(--ac2)" : "var(--mu)" }}
-                  >
-                    {item.icon}
-                  </span>
-                  <span
-                    className="mni-lbl"
-                    style={{ color: isActive ? "var(--ac2)" : "var(--mu)" }}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            }
-
-            // Action-based items (search, categories)
-            return (
-              <div
-                key={i}
-                className={`mni${isActive ? " active" : ""}`}
-                onClick={handleClick}
-                style={{ cursor: "pointer" }}
-              >
-                <span
-                  className="mni-ico"
-                  style={{ color: isActive ? "var(--ac2)" : "var(--mu)" }}
-                >
-                  {item.icon}
-                </span>
-                <span
-                  className="mni-lbl"
-                  style={{ color: isActive ? "var(--ac2)" : "var(--mu)" }}
-                >
-                  {item.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </nav>
+      {/* ✅ Mobile Nav removed - now in app/layout.tsx */}
     </div>
   );
 }

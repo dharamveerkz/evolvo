@@ -42,6 +42,8 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  /* 👇 Smooth scroll offset for fixed header */
+  scroll-padding-top: 80px;
 }
 
 body {
@@ -202,6 +204,11 @@ button,
   box-shadow: 0 0 0 3px var(--gl);
 }
 
+/* 👇 Scroll margin for search input */
+#search {
+  scroll-margin-top: 80px;
+}
+
 .sr-drop {
   position: absolute;
   top: calc(100% + 8px);
@@ -279,23 +286,6 @@ button,
 }
 .btn-p:hover {
   background: var(--ac2);
-}
-
-/* Mobile Nav Icon */
-.mni-ico svg {
-  display: block;
-  stroke: var(--mu);
-  transition:
-    stroke 0.2s,
-    filter 0.2s;
-}
-.mni:hover .mni-ico svg,
-.mni.active .mni-ico svg {
-  stroke: var(--ac2);
-  filter: drop-shadow(0 0 8px var(--gl));
-}
-.mni.active .mni-ico svg {
-  filter: drop-shadow(0 0 6px var(--ac));
 }
 
 /* ─── Hero Section ──────────────────────────────────────── */
@@ -441,6 +431,7 @@ button,
   font-size: 13px;
   color: var(--mu);
 }
+
 .rbtn {
   background: var(--ac);
   border: none;
@@ -867,7 +858,7 @@ button,
   gap: 10px;
 }
 
-/* Social Buttons - MERGED & DEDUPLICATED */
+/* Social Buttons */
 .sbtn3 {
   width: 32px;
   height: 32px;
@@ -924,11 +915,47 @@ button,
   color: var(--mu);
   letter-spacing: 0.3px;
 }
+
+/* 👇 Mobile Nav Active State */
 .mni.active .mni-lbl {
   color: var(--ac2);
+  font-weight: 600;
 }
-.mni.active .mni-ico {
+.mni.active .mni-ico svg {
+  stroke: var(--ac2);
   filter: drop-shadow(0 0 6px var(--ac));
+}
+.mni .mni-ico svg {
+  stroke: var(--mu);
+  transition:
+    stroke 0.2s,
+    filter 0.2s;
+}
+.mni:hover .mni-ico svg {
+  stroke: var(--ac2);
+  filter: drop-shadow(0 0 8px var(--gl));
+}
+
+/* ─── Scroll Highlight Animation ────────────────────────── */
+@keyframes scroll-highlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(108, 99, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(108, 99, 255, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(108, 99, 255, 0);
+  }
+}
+
+.scroll-highlight {
+  animation: scroll-highlight 1s ease-out;
+}
+
+/* 👇 Scroll margin for categories section */
+#categories {
+  scroll-margin-top: 80px;
 }
 
 /* ─── Responsive Breakpoints ────────────────────────────── */
@@ -967,5 +994,12 @@ button,
   }
   .h1 {
     font-size: clamp(32px, 8vw, 48px);
+  }
+}
+
+/* 👇 Hide mobile nav on desktop */
+@media (min-width: 721px) {
+  .mnav {
+    display: none !important;
   }
 }
