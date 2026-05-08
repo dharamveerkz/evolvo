@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-// ✅ Type-safe route mapping: all entries follow the same structure
+// ✅ Type-safe route mapping: keys now match footerColumns exactly
 const LINK_ROUTES: Record<string, { href: string; external?: boolean }> = {
   "How-it-works": { href: "/how-it-works" },
   About: { href: "/about" },
@@ -10,8 +10,8 @@ const LINK_ROUTES: Record<string, { href: string; external?: boolean }> = {
   Privacy: { href: "/support#privacy" },
   Terms: { href: "/support#terms" },
 
-  // 👇 External links (open in new tab)
-  mail: { href: "mailto:dharamveerkumar774@gmail.com", external: true },
+  // 👇 External links - KEYS MATCH footerColumns EXACTLY
+  Mail: { href: "mailto:dharamveerkumar774@gmail.com", external: true }, // ✅ Capital M
   Portfolio: {
     href: "https://dharamveer-cse-portfolio.vercel.app/",
     external: true,
@@ -20,10 +20,7 @@ const LINK_ROUTES: Record<string, { href: string; external?: boolean }> = {
     href: "https://innovation-hub-zeta.vercel.app/",
     external: true,
   },
-  "GitHub Repo": {
-    href: "https://github.com/dharamveerkz",
-    external: true,
-  },
+  "GitHub-Repo": { href: "https://github.com/dharamveerkz", external: true }, // ✅ Hyphen, not space
   Resume: {
     href: "https://dharamveerkz.github.io/",
     external: true,
@@ -34,11 +31,11 @@ export default function Footer() {
   const footerColumns = [
     {
       title: "Platform",
-      links: ["Mail", "Portfolio", "Innovation", "Resume"],
+      links: ["Mail", "Portfolio", "Innovation", "Resume"], // ✅ "Mail" matches LINK_ROUTES
     },
     {
       title: "Company",
-      links: ["About", "Blog", "How-it-works", "GitHub-Repo"],
+      links: ["About", "Blog", "How-it-works", "GitHub-Repo"], // ✅ "GitHub-Repo" matches
     },
     { title: "Support", links: ["Help Center", "Contact", "Privacy", "Terms"] },
   ];
@@ -81,7 +78,6 @@ export default function Footer() {
                         className="flink"
                       >
                         {linkName}
-                        {/* Optional external link icon */}
                         <span
                           style={{ marginLeft: 4, opacity: 0.6, fontSize: 10 }}
                         >
@@ -91,7 +87,7 @@ export default function Footer() {
                     );
                   }
 
-                  // ✅ INTERNAL LINK: Use Next.js <Link> for client-side nav
+                  // ✅ INTERNAL LINK: Use Next.js <Link>
                   return (
                     <Link key={linkName} href={route.href} className="flink">
                       {linkName}
@@ -139,15 +135,13 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="sbtn3"
                 aria-label={`Visit Dharamveer's ${social.name}`}
-                style={{ color: social.color, transition: "all 0.2s" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = `0 0 12px ${social.color}66`;
+                // ✅ CSS-ONLY HOVER: No JS handlers = Server Component safe
+                style={{
+                  color: social.color,
+                  transition: "transform 0.2s, box-shadow 0.2s",
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                // ✅ Add hover effects via className instead (recommended)
+                // Or use inline style with :hover via CSS module/Tailwind
               >
                 {social.icon}
               </a>
