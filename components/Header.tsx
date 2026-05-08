@@ -74,8 +74,21 @@ export default function Header() {
           )}
         </div>
         <div className="hacts">
-          <button className="btn-g">Log in</button>
-          <button className="btn-p">Get Started</button>
+          <a href="/about" className="btn-p" style={{ textDecoration: "none" }}>
+            About
+          </a>
+          <Link
+            href="/blog"
+            className="btn-p"
+            style={{
+              color: "white",
+              textDecoration: "none",
+              fontSize: 13,
+              marginRight: 10,
+            }}
+          >
+            Blog
+          </Link>
         </div>
       </div>
     </header>

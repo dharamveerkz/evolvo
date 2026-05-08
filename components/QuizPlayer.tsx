@@ -1,62 +1,78 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type { QuizQuestion, QuizMeta } from "@/lib/quizzes/types";
+
+// ─── Shuffle Utility (keeps correctIndex in sync) ───
+function shuffleQuiz(questions: QuizQuestion[]): QuizQuestion[] {
+  const qArr = [...questions];
+  for (let i = qArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [qArr[i], qArr[j]] = [qArr[j], qArr[i]];
+  }
+  return qArr.map((q) => {
+    const indexed = q.options.map((opt, idx) => ({
+      text: opt,
+      isCorrect: idx === q.correctIndex,
+    }));
+    const shuffled = [...indexed];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return {
+      ...q,
+      options: shuffled.map((s) => s.text),
+      correctIndex: shuffled.findIndex((s) => s.isCorrect),
+    };
+  });
+}
 
 interface Props {
   questions: QuizQuestion[];
   meta: QuizMeta;
-  onComplete: (result: QuizResult) => void;
-}
-
-export interface QuizResult {
-  score: number;
-  total: number;
-  passed: boolean;
-  answers: (number | null)[];
+  onComplete: (result: {
+    score: number;
+    total: number;
+    answers: (number | null)[];
+  }) => void;
 }
 
 export default function QuizPlayer({ questions, meta, onComplete }: Props) {
+  // Shuffle once per mount (key change in parent triggers remount)
+  const shuffledQuestions = useMemo(() => shuffleQuiz(questions), []);
+
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout>();
 
-  const q = questions[idx];
-  const total = questions.length;
-  const progress = ((idx + (answers.length === total ? 1 : 0)) / total) * 100;
-  const passThreshold = meta.passThreshold ?? 70; // Default 70%
+  const q = shuffledQuestions[idx];
+  const total = shuffledQuestions.length;
+  const progress = (idx / total) * 100;
 
-  const handleSelect = (optionIndex: number) => {
-    if (selected !== null) return; // Prevent multiple answers
-    setSelected(optionIndex);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const handleSelect = (optionIdx: number) => {
+    if (selected !== null) return;
+    setSelected(optionIdx);
     setShowFeedback(true);
+    const correct = optionIdx === q.correctIndex;
+    if (correct) setScore((s) => s + 1);
 
-    const isCorrect = optionIndex === q.correctIndex;
-    if (isCorrect) setScore((s) => s + 1);
-
-    const newAnswers = [...answers, optionIndex];
-    setAnswers(newAnswers);
-
-    // Auto-advance after short delay
-    setTimeout(() => {
+    const newAnswers = [...answers, optionIdx];
+    timerRef.current = setTimeout(() => {
       if (idx + 1 >= total) {
-        // Quiz finished
-        const finalScore = newAnswers.filter((_, i) => {
-          const userAns = newAnswers[i];
-          return userAns !== null && userAns === questions[i].correctIndex;
-        }).length;
-
-        const passed = finalScore >= passThreshold;
+        setAnswers(newAnswers);
         onComplete({
-          score: finalScore,
+          score: correct ? score + 1 : score,
           total,
-          passed,
           answers: newAnswers,
         });
       } else {
-        // Next question
+        setAnswers(newAnswers);
         setIdx((i) => i + 1);
         setSelected(null);
         setShowFeedback(false);
@@ -64,235 +80,145 @@ export default function QuizPlayer({ questions, meta, onComplete }: Props) {
     }, 800);
   };
 
-  // ─── RESULT SCREEN ─────────────────────────────────────
-  if (answers.length === total) {
-    const finalScore = answers.filter((_, i) => {
-      const userAns = answers[i];
-      return userAns !== null && userAns === questions[i].correctIndex;
-    }).length;
-    const passed = finalScore >= passThreshold;
-    const percentage = Math.round((finalScore / total) * 100);
+  if (!q) return null;
 
-    return (
+  return (
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px" }}>
+      {/* Header Stats */}
       <div
-        className="panel"
         style={{
-          maxWidth: 600,
-          margin: "40px auto",
-          border: "1px solid var(--bd2)",
-          textAlign: "center",
-          padding: "40px 20px",
+          background: "linear-gradient(135deg, #1a1a2e, #16213e)",
+          borderBottom: "1px solid #2a2a4a",
+          padding: "14px 20px",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          borderRadius: "12px 12px 0 0",
         }}
       >
-        <div style={{ fontSize: 64, marginBottom: 16 }}>
-          {passed ? "🎉" : "💪"}
-        </div>
-        <h2 style={{ fontSize: 24, marginBottom: 8 }}>
-          {passed ? "Quiz Passed!" : "Keep Practicing!"}
-        </h2>
-
-        {/* Score Display */}
-        <div
-          style={{
-            background: passed
-              ? "rgba(16,185,129,0.15)"
-              : "rgba(239,68,68,0.15)",
-            border: `1px solid ${passed ? "#34d399" : "#f87171"}`,
-            borderRadius: 16,
-            padding: "20px 24px",
-            margin: "24px 0",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 42,
-              fontWeight: 900,
-              color: passed ? "#34d399" : "#f87171",
-            }}
-          >
-            {finalScore}{" "}
-            <span style={{ fontSize: 20, color: "var(--mu)" }}>out of</span>{" "}
-            {total}
-          </div>
-          <div style={{ fontSize: 14, color: "var(--mu)", marginTop: 4 }}>
-            {percentage}% correct • Needed {passThreshold}+ to pass
-          </div>
-        </div>
-
-        {/* Certificate / Retry Buttons */}
         <div
           style={{
             display: "flex",
-            gap: 12,
-            justifyContent: "center",
+            alignItems: "center",
+            justifyContent: "space-between",
             flexWrap: "wrap",
+            gap: 8,
           }}
         >
-          {passed && meta.showCertificate && (
-            <button
-              className="btn-p"
-              onClick={() =>
-                onComplete({
-                  score: finalScore,
-                  total,
-                  passed: true,
-                  answers,
-                  showCertificate: true,
-                })
-              }
-              style={{ minWidth: 140 }}
+          <div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: 3,
+                color: "#7c7caa",
+                textTransform: "uppercase",
+              }}
             >
-              📜 Get Certificate
-            </button>
-          )}
-          <button
-            className="btn-g"
-            onClick={() => window.location.reload()}
-            style={{ minWidth: 140 }}
-          >
-            🔄 Retake Quiz
-          </button>
+              {meta.title}
+            </div>
+            <div style={{ fontSize: 11, color: "#555580", marginTop: 2 }}>
+              Question {idx + 1} of {total}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#4ade80" }}>
+                {score}
+              </div>
+              <div style={{ fontSize: 10, color: "#555580" }}>CORRECT</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#f87171" }}>
+                {answers.length - score}
+              </div>
+              <div style={{ fontSize: 10, color: "#555580" }}>WRONG</div>
+            </div>
+          </div>
         </div>
-
-        {/* Review Answers (Optional) */}
-        <details
+        <div
           style={{
-            marginTop: 24,
-            textAlign: "left",
-            borderTop: "1px solid var(--bd)",
-            paddingTop: 16,
+            marginTop: 10,
+            background: "#1e1e3a",
+            borderRadius: 4,
+            height: 4,
+            overflow: "hidden",
           }}
         >
-          <summary
-            style={{ cursor: "pointer", color: "var(--mu)", fontSize: 13 }}
-          >
-            Review your answers
-          </summary>
           <div
             style={{
-              marginTop: 12,
-              maxHeight: 300,
-              overflowY: "auto",
+              height: "100%",
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, #6c63ff88, #6c63ff)",
+              borderRadius: 4,
+              transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Question Card */}
+      <div
+        style={{
+          background: "linear-gradient(145deg, #1a1a2e, #1e1e38)",
+          border: "1px solid #2e2e50",
+          borderRadius: "20px",
+          padding: "28px",
+          marginBottom: 20,
+          marginTop: 20,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <div
+            style={{
+              background: "linear-gradient(135deg, #6c63ff22, #6c63ff44)",
+              border: "1px solid #6c63ff55",
+              borderRadius: 10,
+              padding: "6px 12px",
               fontSize: 13,
+              fontWeight: 900,
+              color: "#8b85ff",
+              flexShrink: 0,
             }}
           >
-            {questions.map((question, i) => {
-              const userAns = answers[i];
-              const isCorrect = userAns === question.correctIndex;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    padding: "8px 0",
-                    borderBottom: "1px solid var(--bd)",
-                    display: "flex",
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      color: isCorrect ? "#34d399" : "#f87171",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {isCorrect ? "✓" : "✗"}
-                  </span>
-                  <span>{question.question}</span>
-                  <span style={{ color: "var(--mu)", marginLeft: "auto" }}>
-                    Your:{" "}
-                    {userAns !== null ? question.options[userAns] : "Skipped"}
-                  </span>
-                </div>
-              );
-            })}
+            Q{idx + 1}
           </div>
-        </details>
+          <div style={{ fontSize: 18, lineHeight: 1.55, color: "#e8e8f8" }}>
+            {q.question}
+          </div>
+        </div>
       </div>
-    );
-  }
 
-  // ─── QUESTION SCREEN ───────────────────────────────────
-  return (
-    <div
-      className="panel"
-      style={{
-        maxWidth: 600,
-        margin: "40px auto",
-        border: "1px solid var(--bd2)",
-      }}
-    >
-      {/* Progress Bar + Live Score */}
+      {/* Options */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 16,
-          padding: "0 4px",
+          flexDirection: "column",
+          gap: 10,
+          marginBottom: 28,
         }}
       >
-        <div style={{ fontSize: 13, color: "var(--mu)" }}>
-          Question {idx + 1} of {total}
-        </div>
-        <div
-          style={{
-            background: "var(--s2)",
-            padding: "4px 12px",
-            borderRadius: 20,
-            fontSize: 13,
-            border: `1px solid ${score >= passThreshold ? "#34d399" : "var(--bd2)"}`,
-            color: score >= passThreshold ? "#34d399" : "var(--mu)",
-          }}
-        >
-          {score} / {idx + 1} correct
-        </div>
-      </div>
-
-      <div
-        style={{
-          background: "var(--s2)",
-          height: 4,
-          borderRadius: 2,
-          overflow: "hidden",
-          marginBottom: 24,
-        }}
-      >
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: "var(--ac)",
-            transition: "width .3s",
-          }}
-        />
-      </div>
-
-      <h3 style={{ fontSize: 18, marginBottom: 20, lineHeight: 1.4 }}>
-        {q.question}
-      </h3>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {q.options.map((opt, i) => {
           const isSelected = selected === i;
           const isCorrect = i === q.correctIndex;
           const showCorrect = showFeedback && isCorrect;
           const showWrong = showFeedback && isSelected && !isCorrect;
-
-          let bg = "var(--sf)";
-          let border = "var(--bd2)";
-          let color = "var(--tx)";
-
+          let bg = "linear-gradient(145deg, #181828, #1e1e34)";
+          let border = "#2e2e50";
+          let color = "#c0c0e0";
           if (showCorrect) {
-            bg = "rgba(16,185,129,0.15)";
-            border = "#34d399";
-            color = "#34d399";
+            bg = "linear-gradient(145deg, #052e16, #064e20)";
+            border = "#4ade80";
+            color = "#4ade80";
           } else if (showWrong) {
-            bg = "rgba(239,68,68,0.15)";
+            bg = "linear-gradient(145deg, #2d0010, #3d0015)";
             border = "#f87171";
             color = "#f87171";
           } else if (isSelected) {
-            bg = "var(--s3)";
-            border = "var(--ac)";
+            bg = "linear-gradient(145deg, #1e1e48, #252550)";
+            border = "#818cf8";
+            color = "#c7d2fe";
           }
 
           return (
@@ -301,41 +227,47 @@ export default function QuizPlayer({ questions, meta, onComplete }: Props) {
               onClick={() => handleSelect(i)}
               disabled={selected !== null}
               style={{
-                padding: "14px 16px",
                 background: bg,
-                border: `1px solid ${border}`,
-                borderRadius: 10,
-                color: color,
-                cursor: selected !== null ? "default" : "pointer",
-                textAlign: "left",
-                fontSize: 14,
-                transition: "all .2s",
+                border: `2px solid ${border}`,
+                borderRadius: 14,
+                padding: "14px 18px",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: 14,
+                cursor: selected !== null ? "default" : "pointer",
+                transition: "all 0.2s",
+                textAlign: "left",
+                boxShadow:
+                  showCorrect || showWrong
+                    ? `0 0 16px ${showCorrect ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`
+                    : "none",
               }}
             >
-              <span
+              <div
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  border: `1px solid ${border}`,
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  border: `1.5px solid ${border}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 900,
+                  color,
                   flexShrink: 0,
+                  background: showCorrect
+                    ? "rgba(74,222,128,0.15)"
+                    : showWrong
+                      ? "rgba(248,113,113,0.15)"
+                      : "transparent",
                 }}
               >
-                {showCorrect
-                  ? "✓"
-                  : showWrong
-                    ? "✗"
-                    : String.fromCharCode(65 + i)}
+                {showCorrect ? "✓" : showWrong ? "✗" : ["A", "B", "C", "D"][i]}
+              </div>
+              <span style={{ fontSize: 15, color, lineHeight: 1.4 }}>
+                {opt}
               </span>
-              {opt}
             </button>
           );
         })}
