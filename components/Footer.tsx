@@ -118,7 +118,7 @@ export default function Footer() {
               {
                 name: "GitHub",
                 icon: "⌨️",
-                href: "https://github.com/dharamveerkz",
+                href: "https://github.com/dharamveerkr",
                 color: "#ffffff",
               },
               {
