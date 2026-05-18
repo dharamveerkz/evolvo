@@ -20,7 +20,7 @@ const LINK_ROUTES: Record<string, { href: string; external?: boolean }> = {
     href: "https://innovation-hub-zeta.vercel.app/",
     external: true,
   },
-  "GitHub-Repo": { href: "https://github.com/dharamveerkz", external: true }, // ✅ Hyphen, not space
+  "GitHub-Repo": { href: "https://github.com/dharamveerkr", external: true }, // ✅ Hyphen, not space
   Resume: {
     href: "https://dharamveerkz.github.io/",
     external: true,
