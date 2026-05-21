@@ -145,8 +145,7 @@ export default function Home() {
           <em>Improve.</em> Repeat.
         </h1>
         <p className="hsub">
-          Adaptive quizzes for every field — from web development to medicine.
-          Track growth, earn certificates, master every topic.
+          Adaptive quizzes for every tech field — learn, track progress, earn certificates, and master modern technology.
         </p>
 
         {/* CTA Buttons with Dropdown */}
